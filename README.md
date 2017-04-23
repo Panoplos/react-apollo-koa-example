@@ -56,8 +56,8 @@ Frameworks/Libraries
 * [react-router](https://github.com/ReactTraining/react-router) and
   [react-router-redux](https://github.com/reactjs/react-router-redux)
   (URL routes management)
-* [redux-auth-wrapper](https://github.com/mjrussell/redux-auth-wrapper)
-  (Authentication)
+* [redux-auth-wrapper](https://github.com/mjrussell/redux-auth-wrapper) and
+  [passport](https://github.com/jaredhanson/passport) (Authentication)
 * [redux-logic](https://github.com/jeffbski/redux-logic)
   with [RxJS](https://github.com/ReactiveX/rxjs)
   (Async logic management)
@@ -75,12 +75,20 @@ See package.json for more information.
 ### Server-side (the API server)
 
 * [Koa v.2](https://github.com/koajs/koa)
+* [koa-passport](https://github.com/rkusa/koa-passport) (Authentication)
 * [Apollo](http://dev.apollodata.com/) (GraphQL)
+* [Caddy](https://caddyserver.com/) (Proxy)
 
 See package.json for more information.
 
 The API server does not use DB and stores data on memory.
 All changes will be cleared when you stop the server.
+
+The development build depends on Caddy for proxying to the Koa backend,
+which is required for proper handling of OAuth2 based authentication.
+(An external proxy server is currently necessary, as here is a bug in the
+  webpack dev server proxy where anchor element links on the same domain are
+  captured by React and render 404s.)
 
 ### Unit Tests
 
