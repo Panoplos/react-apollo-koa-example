@@ -46,24 +46,3 @@ export function generateTokens(username: string, ctx: Object): Object {
   )
   return { accessToken, refreshToken }
 }
-
-export function extractToken(ctx: Object): string | null {
-  const authHeader = ctx.request.get('Authorization')
-  const match = /^Bearer (\S+)/.exec(authHeader)
-  if (!authHeader || !match) {
-    return null
-  }
-  return match[1]
-}
-
-export function verifyToken(token: string) {
-  try {
-    const payload = jwt.verify(token, env('JWT_SECRET'), {
-      issuer: env('JWT_ISSUER'),
-      audience: env('JWT_AUDIENCE')
-    })
-    return payload.user
-  } catch (err) {
-    return null
-  }
-}

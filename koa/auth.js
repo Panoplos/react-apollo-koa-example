@@ -107,11 +107,19 @@ passport.use(
 const JwtStrategy = require('passport-jwt').Strategy
 const ExtractJwt = require('passport-jwt').ExtractJwt
 
+function tokenExractor(req) {
+  let token = req.headers.authorization ? req.headers.authorization.split(' ')[1] : null
+  if (!token) {
+    token = req.body.refreshToken
+  }
+  return token
+}
+
 passport.use(
   new JwtStrategy(
     {
       session: false,
-      jwtFromRequest: ExtractJwt.fromAuthHeaderWithScheme('Bearer'),
+      jwtFromRequest: ExtractJwt.fromExtractors([tokenExractor]),
       secretOrKey: env('JWT_SECRET'),
       issuer: env('JWT_ISSUER'),
       audience: env('JWT_AUDIENCE')

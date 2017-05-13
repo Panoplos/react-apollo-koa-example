@@ -12,8 +12,7 @@ import { executableSchema } from './executableSchema'
 import subscriptionManager from './subscriptions'
 import { resolvers } from './resolvers'
 import queryMap from '../extracted_queries.json'
-import { MemStore, session } from './koa-jwt-session'
-import { env, errorHandler, generateTokens, extractToken, verifyToken } from './utils'
+import { env, errorHandler, generateTokens } from './utils'
 
 const app = new Koa()
 
@@ -23,22 +22,6 @@ app.proxy = true
 app.use(logger())
 app.use(bodyParser())
 app.use(errorHandler)
-app.use(
-  session(MemStore, {
-    jwt: {
-      secretOrPublicKey: env('JWT_SECRET'),
-      audience: env('JWT_AUDIENCE'),
-      issuer: env('JWT_ISSUER'),
-      expiresIn: 60 * 60 * 2 // 2h
-    }
-  }),
-  async (ctx: Object, next: () => {}) => {
-    if (ctx.session) {
-      ctx.req.session = ctx.session
-    }
-    await next()
-  }
-)
 // Authentication
 require('./auth')
 
@@ -57,11 +40,7 @@ const router = Router()
 router.post('/graphql', async (ctx, next) => {
   // Authenticate the session
   await passport.authenticate('jwt', { session: false }, async (err, user) => {
-    const sUser = await ctx.session.user()
-    // Now authenticate the accessToken
-    const token = extractToken(ctx)
-    const tUser = verifyToken(token)
-    if (user && sUser && tUser && user.id === sUser.id && user.username === tUser.username) {
+    if (user) {
       await convert(graphqlKoa({ schema: executableSchema }))(ctx, next)
     } else {
       ctx.body = {
@@ -89,7 +68,6 @@ router.post('/auth/signin', async (ctx, next) => {
       }
       ctx.status = 401
     } else {
-      await ctx.session.getStore().set(ctx.session.jwtid, user)
       const tokens = generateTokens(user.username, ctx)
       ctx.body = tokens
       ctx.status = 201
@@ -128,38 +106,19 @@ router.get('/auth/social/signin/callback', async (ctx, next) => {
       ctx.status = 401
     } else {
       const tokens = generateTokens(user.username, ctx)
-      await ctx.session.getStore().set(ctx.session.jwtid, user)
       ctx.body = tokens
       ctx.status = 201
     }
   })(ctx, next)
 })
 
-router.put('/auth/social/singin/failed', async (ctx) => {
-  ctx.session.end()
-  ctx.status = 201
-})
-
-router.post('/auth/signout', async (ctx, next) => {
+router.post('/auth/refresh', async (ctx, next) => {
   // Authenticate the session
   await passport.authenticate('jwt', { session: false }, async (err, user) => {
-    const sUser = await ctx.session.user()
-    // Now authenticate the accessToken
-    const token = extractToken(ctx)
-    const tUser = verifyToken(token)
-    if (user && sUser && tUser) {
-      if (user.id !== sUser.id || user.username !== tUser.username) {
-        ctx.body = {
-          error: {
-            message: 'Illegal Operation: Cannot log out another user.'
-          }
-        }
-        ctx.status = 401
-      } else {
-        ctx.session.end()
-        ctx.body = {}
-        ctx.status = 201
-      }
+    if (user) {
+      const { accessToken, refreshToken } = generateTokens(user.username, ctx)
+      ctx.body = { accessToken, refreshToken }
+      ctx.status = 201
     } else {
       ctx.body = {
         error: {

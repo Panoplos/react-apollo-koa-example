@@ -41,11 +41,6 @@ networkInterfaceWithSubscriptions.use([
       if (localStorage.accessToken) {
         req.options.headers.Authorization = `Bearer ${localStorage.accessToken}`
       }
-      if (localStorage.xhrHeaders) {
-        req.options.headers['X-Session-Token'] = JSON.parse(localStorage.xhrHeaders)[
-          'X-Session-Token'
-        ]
-      }
       next()
     }
   }

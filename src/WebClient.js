@@ -80,9 +80,7 @@ class WebClient {
     this.debugAuth('refreshing token')
     return Rx.Observable.create((observer: Rx.Observer) => {
       const refreshToken = localStorage.getItem('refreshToken') || ''
-      const body = new FormData()
-      body.set('refresh_token', refreshToken)
-      this.post('/refresh_token', body, null, false).subscribe(
+      this.post('/auth/refresh', { refreshToken }, null, false).subscribe(
         (response: Object) => {
           localStorage.setItem('accessToken', response.accessToken)
           observer.next(response)

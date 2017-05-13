@@ -199,13 +199,7 @@ export const localSigninLogic = createLogic({
     const body = { username, password }
     const headers = { 'Content-Type': 'application/json' }
     return webClient.post('auth/signin', body, headers, false).map((payload) => {
-      localStorage.setItem(
-        'xhrHeaders',
-        JSON.stringify({ 'X-Session-Token': payload.xhr.getResponseHeader('X-Session-Token') })
-      )
-      // const sessionToken = payload.xhr.getResponseHeader('X-SESSION-TOKEN')
       const { accessToken, refreshToken } = payload.response
-      // localStorage.setItem('sessionToken', sessionToken)
       localStorage.setItem('accessToken', accessToken)
       localStorage.setItem('refreshToken', refreshToken)
       return payload.response
@@ -243,10 +237,6 @@ export const socialSigninCallbackLogic = createLogic({
         false
       )
       .map((payload) => {
-        localStorage.setItem(
-          'xhrHeaders',
-          JSON.stringify({ 'X-Session-Token': payload.xhr.getResponseHeader('X-Session-Token') })
-        )
         const { accessToken, refreshToken } = payload.response
         localStorage.setItem('accessToken', accessToken)
         localStorage.setItem('refreshToken', refreshToken)
@@ -260,10 +250,7 @@ export const signoutLogic = createLogic({
   type: SIGNOUT,
   latest: true,
 
-  process({ webClient }) {
-    const headers = { 'Content-Type': 'application/json' }
-    webClient.post('auth/signout', {}, headers, true).subscribe()
-    localStorage.removeItem('xhrHeaders')
+  process() {
     localStorage.removeItem('accessToken')
     localStorage.removeItem('refreshToken')
     localStorage.removeItem('redirectTarget')
